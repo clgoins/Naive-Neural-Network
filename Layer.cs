@@ -5,10 +5,12 @@ public class Layer
 
     private Node[] nodes;
     public int nodeCount {get; private set;}
-    private Layer? previousLayer;
-    private Layer? nextLayer;
+    public Layer? previousLayer {get; private set;}
+    public Layer? nextLayer {get; private set;}
     public double[,] weights { get; private set;}
     public double[] biases { get; private set;}
+    public double[,] weightCostGradient;
+    public double[] biasCostGradient;
 
     public Layer(int nodeCount)
     {
@@ -24,6 +26,9 @@ public class Layer
 
         weights = new double[0,0];
         biases = new double[0];
+        weightCostGradient = new double[0,0];
+        biasCostGradient = new double[0];
+
     }
 
 
@@ -47,6 +52,8 @@ public class Layer
 
         weights = new double[nodeCount,nextLayer.nodeCount];
         biases = new double[nextLayer.nodeCount];
+        weightCostGradient = new double[nodeCount, nextLayer.nodeCount];
+        biasCostGradient = new double[nextLayer.nodeCount];
 
         for (int i = 0; i < nextLayer.nodeCount; i++)
         {
@@ -120,6 +127,39 @@ public class Layer
         {
             node.activate();
         }
+    }
+
+
+    // takes a single training data point and calculates the total cost based on the difference between the actual and desired outputs
+    public double layerCost(TrainingDataPoint dataPoint)
+    {
+        double cost = 0.0;
+
+        for (int i = 0; i < dataPoint.expectedOutputs.Length; i++)
+        {
+            cost += nodes[i].nodeCost(dataPoint.expectedOutputs[i]);
+        }
+
+        return cost;
+    }
+
+
+    // applies the two weight/bias cost gradients to the weights and biases of the layer
+    public void applyGradients(double learnRate)
+    {
+        if (nextLayer == null)
+            return;
+
+        for (int i = 0; i < nextLayer.nodeCount; i++)
+        {
+            biases[i] -= biasCostGradient[i] * learnRate;
+
+            for (int j = 0; j < nodeCount; j++)
+            {
+                weights[j,i] -= weightCostGradient[j,i] * learnRate;
+            }
+        }
+
     }
 
 }

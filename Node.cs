@@ -19,10 +19,19 @@ public class Node
     }
 
 
-    // passes input through linear activation function, stores output value
+    // passes input through sigmoid activation function, stores output value
     public void activate()
     {
-        outputValue = Math.Max(0,inputValue);
+
+        outputValue = 1 / (1 + Math.Exp(-inputValue));
+    }
+
+
+    // calculates the cost function for a single node, based on the difference between the actual and desired output
+    public double nodeCost(double expectedOutput)
+    {
+        double cost = outputValue - expectedOutput;
+        return cost*cost;
     }
 
 }

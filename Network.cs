@@ -85,6 +85,66 @@ public class Network
             }
         }
 
+
+        // runs a set of training data through the network, and calculates the average cost over the entire set
+        public double cost(TrainingDataPoint[] data)
+        {
+            double cost = 0;
+
+            foreach (TrainingDataPoint point in data)
+            {
+                process(point.inputs);
+                cost += layers[layers.Length - 1].layerCost(point);
+            }
+
+            return cost / data.Length;
+        }
+
+
+        // calculates cost of network, makes small tweaks to weights and biases, determining how the cost changes each time, and takes a single step in the direction that will reduce cost the most
+        public void train(TrainingDataPoint[] data, double learnRate)
+        {
+            const double h = 0.00001;
+            double originalCost = cost(data);
+
+            foreach(Layer layer in layers)
+            {
+                for (int i = 0; i < layer.weights.GetLength(0); i++)
+                {
+                        for (int j = 0; j < layer.weights.GetLength(1); j++)
+                        {
+                            layer.weights[i,j] += h;
+                            double deltaCost = cost(data) - originalCost;
+                            //Console.WriteLine(deltaCost + originalCost);
+                            layer.weights[i,j] -= h;
+                            layer.weightCostGradient[i,j] = deltaCost/h;
+                        }
+                }
+
+                for (int i = 0; i < layer.biases.Length; i++)
+                {
+                    layer.biases[i] += h;
+                    double deltaCost = cost(data) - originalCost;
+                    //Console.WriteLine(deltaCost + originalCost);
+                    layer.biases[i] -= h;
+                    layer.biasCostGradient[i] = deltaCost/h;
+                }
+            }
+
+            applyAllGradients(learnRate);
+        }
+
+
+        // applies all weight and bias gradients to every layer in the network
+        public void applyAllGradients(double learnRate)
+        {
+            foreach (Layer layer in layers)
+            {
+                layer.applyGradients(learnRate);
+            }
+        }
+
+
     }
 
 
