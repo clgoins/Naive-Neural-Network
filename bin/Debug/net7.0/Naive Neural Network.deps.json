@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "Naive Neural Network/1.0.0": {
+        "runtime": {
+          "Naive Neural Network.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Naive Neural Network/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
