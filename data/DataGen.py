@@ -27,10 +27,15 @@ def labelData(dataList):
             point['r'] = 1
 
 
+###
+# Categorization function
 def categorize(x):
-    return 2 * x - 3
+    return ( 0.05 * x * x ) - (1.5 * x ) - 1.5
+###
 
 
+# Generates a matplotlib graph to visualize the data being generated
+# If showCatLine is true, the categorization function will also be drawn as a line on the screen
 def visualizeData(dataList, showCatLine):
     xList = []
     yList = []
@@ -51,10 +56,10 @@ def visualizeData(dataList, showCatLine):
 
             if point['x'] < lowestValue:
                 lowestValue = point['x']
-            
+
             if point['y'] < lowestValue:
                 lowestValue = point['y']
-        
+
         if point['b'] == 1:
             cList.append([0,0,1])
         else:
@@ -70,15 +75,17 @@ def visualizeData(dataList, showCatLine):
     plt.show()
 
 
+# saves the generated data to a csv file
 def saveToCSV(dataList, filename):
     with open(filename,'w') as f:
         for point in dataList:
             f.write(f"{point['x']},{point['y']},{point['b']},{point['r']}\n")
 
 
+# loads previously generated data from a csv file
 def readFromCSV(filename):
     data = []
-    
+
     with open(filename, 'r') as f:
         for line in f:
             split = line.split(',')
@@ -89,8 +96,8 @@ def readFromCSV(filename):
 
 
 for i in range(10):
-    dataList = generateData(10000, -1000, 1000, -1000, 1000)
+    dataList = generateData(10000, -50, 200, -50, 200)
     labelData(dataList)
-    saveToCSV(dataList, f"dataBIG{i}.csv")
+    saveToCSV(dataList, f".\quadratic data\dataBIG{i}.csv")
 
-visualizeData(dataList, True)
+visualizeData(dataList, False)

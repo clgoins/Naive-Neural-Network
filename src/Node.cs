@@ -22,8 +22,9 @@ public class Node
     // passes input through sigmoid activation function, stores output value
     public void activate()
     {
-
-        outputValue = 1 / (1 + Math.Exp(-inputValue));
+        //outputValue = 1 / (1 + Math.Exp(-inputValue));  //sigmoid
+        outputValue = Math.Tanh(inputValue);
+        //outputValue = Math.Max(0,inputValue);   //reLu
     }
 
 

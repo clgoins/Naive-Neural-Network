@@ -52,14 +52,29 @@ public class Network
 
         public void printDebugStuff()
         {
+            Console.WriteLine();
+
             for (int i = 0; i < layers.Length; i++)
             {
+                //print layer number
                 Console.BackgroundColor = ConsoleColor.Green;
                 Console.WriteLine("Layer " + (i + 1) + ": ");
                 Console.WriteLine();
                 Console.BackgroundColor = ConsoleColor.Black;
 
+                //print activation values
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine("Activations: ");
+                Console.ForegroundColor = ConsoleColor.White;
+                double[] activationValues = layers[i].output();
+                for (int j = 0; j < activationValues.Length; j++)
+                {
+                    Console.Write(activationValues[j] + ", ");
+                }
+                Console.WriteLine();
+                Console.WriteLine();
 
+                //print weight values
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("Weights: ");
                 Console.ForegroundColor = ConsoleColor.White;
@@ -72,6 +87,8 @@ public class Network
                     Console.WriteLine();
                 }
                 Console.WriteLine();
+
+                //print bias values
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("Biases: ");
                 Console.ForegroundColor = ConsoleColor.White;
@@ -102,7 +119,7 @@ public class Network
 
 
         // calculates cost of network, makes small tweaks to weights and biases, determining how the cost changes each time, and takes a single step in the direction that will reduce cost the most
-        public void train(TrainingDataPoint[] data, double learnRate)
+        public double train(TrainingDataPoint[] data, double learnRate)
         {
             const double h = 0.00001;
             double originalCost = cost(data);
@@ -132,6 +149,8 @@ public class Network
             }
 
             applyAllGradients(learnRate);
+
+            return cost(data);
         }
 
 
