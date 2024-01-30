@@ -1,12 +1,12 @@
 
-using System.Runtime.InteropServices.ComTypes;
-using System.Diagnostics.Metrics;
-
 public class Program
 {
 
 
 
+    // TODO: get the batch size, learn rate, and training data path as command line arguments
+    // TODO: Split the input file into two to get the training and testing data from the same file
+    // TODO: Write a couple input normalization functions (i.e. shift data so it's all positive, scale data so it falls between 0 and 1, etc)
     public static void Main(string[] args)
     {
 
@@ -22,14 +22,10 @@ public class Program
         // load training data from file
         TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/linear data/dataBIG0.csv", 2, 2);
 
-        //network.process(trainingData[trainingData.Length-1].inputs);
-
-        //network.printDebugStuff();
-
-        // runs gradient descent algorithm until a key is pressed
 
         int batchSize = 100;
 
+        // runs gradient descent algorithm until a key is pressed
         while(! Console.KeyAvailable)
         {
             int batchCount = 0;
@@ -46,11 +42,6 @@ public class Program
                 batchCount++;
             }
         }
-
-        //network.printDebugStuff();
-
-
-
 
 
 
@@ -80,10 +71,6 @@ public class Program
         }
 
     }
-
-
-
-
 
 
 
@@ -125,41 +112,4 @@ public class Program
         return data.ToArray();
     }
 
-
-    // Shifts all training data equally such that all input values are positive
-    public static void MakePositive(TrainingDataPoint[] data)
-    {
-        double[] smallestValues = new double[data[0].inputs.Length];
-
-        // find smallest value on each axis
-        foreach (TrainingDataPoint point in data)
-        {
-            for (int i = 0; i < point.inputs.Length; i++)
-            {
-                if (point.inputs[i] < smallestValues[i])
-                    smallestValues[i] = point.inputs[i];
-            }
-        }
-
-        // shift all values to above 0
-        foreach (TrainingDataPoint point in data)
-        {
-            for (int i = 0; i < point.inputs.Length; i++)
-            {
-                if (smallestValues[i] >= 0)
-                    continue;
-
-                point.inputs[i] += Math.Abs(smallestValues[i]);
-            }
-        }
-
-
-    }
-
-
-    // Scales all training data such that all values are within 1 and 0
-    //public static TrainingDataPoint[] Normalize(TrainingDataPoint[] data)
-    //{
-
-    //}
 }
