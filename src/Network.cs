@@ -39,7 +39,7 @@ public class Network
         public double[] process(double[] inputValues)
         {
 
-            layers[0].input(inputValues);
+            layers[0].input(inputValues,true);
 
             for (int i = 0; i < layers.Length; i++)
             {
@@ -132,7 +132,6 @@ public class Network
                         {
                             layer.weights[i,j] += h;
                             double deltaCost = cost(data) - originalCost;
-                            //Console.WriteLine(deltaCost + originalCost);
                             layer.weights[i,j] -= h;
                             layer.weightCostGradient[i,j] = deltaCost/h;
                         }
@@ -142,7 +141,6 @@ public class Network
                 {
                     layer.biases[i] += h;
                     double deltaCost = cost(data) - originalCost;
-                    //Console.WriteLine(deltaCost + originalCost);
                     layer.biases[i] -= h;
                     layer.biasCostGradient[i] = deltaCost/h;
                 }

@@ -68,26 +68,24 @@ public class Layer
 
 
     // takes an array of doubles and stores them in the nodes of this layer
-    public void input(double[] inputs)
+    // isInputLayer adjusts whether the node inputs are passed through an activation function
+    public void input(double[] inputs, bool isInputLayer)
     {
         if (inputs.Length != nodeCount)
             throw new InvalidInputLengthException();
 
         for (int i = 0; i < nodeCount; i++)
         {
-            nodes[i].input(inputs[i]);
+            nodes[i].input(inputs[i], !isInputLayer);
         }
     }
 
 
-    // activates & weights the nodes in this layer and passes the outputs to the next layer
+    // applies weights and biases to the activation values in this layer and passes them to the inputs of the next layer
     public void propagate()
     {
-        // if this is the input layer, skip the activation step
-        if (previousLayer != null)
-            activateNodes();
 
-        // if this is not the output layer, weight the outputs of this layer and pass them to the input of the next layer
+        // if this is the output layer, do nothing
         if (nextLayer == null)
             return;
 
@@ -102,7 +100,8 @@ public class Layer
             }
         }
 
-        nextLayer.input(outputs);
+        // previousLayer == null if this is the input layer
+        nextLayer.input(outputs, previousLayer==null);
 
     }
 
@@ -117,16 +116,6 @@ public class Layer
         }
 
         return outputs;
-    }
-
-
-    // Iterates each node in the layer and calls its activation function
-    private void activateNodes()
-    {
-        foreach (Node node in nodes)
-        {
-            node.activate();
-        }
     }
 
 
