@@ -121,34 +121,28 @@ public class Network
         // calculates cost of network, makes small tweaks to weights and biases, determining how the cost changes each time, and takes a single step in the direction that will reduce cost the most
         public double train(TrainingDataPoint[] data, double learnRate)
         {
-            const double h = 0.00001;
-            double originalCost = cost(data);
 
-            foreach(Layer layer in layers)
+            double cost = 0;
+
+            foreach (TrainingDataPoint point in data)
             {
-                for (int i = 0; i < layer.weights.GetLength(0); i++)
-                {
-                        for (int j = 0; j < layer.weights.GetLength(1); j++)
-                        {
-                            layer.weights[i,j] += h;
-                            double deltaCost = cost(data) - originalCost;
-                            layer.weights[i,j] -= h;
-                            layer.weightCostGradient[i,j] = deltaCost/h;
-                        }
-                }
-
-                for (int i = 0; i < layer.biases.Length; i++)
-                {
-                    layer.biases[i] += h;
-                    double deltaCost = cost(data) - originalCost;
-                    layer.biases[i] -= h;
-                    layer.biasCostGradient[i] = deltaCost/h;
-                }
+                process(point.inputs);
+                cost += layers[layers.Length - 1].layerCost(point);
+                calculateAllGradients(point.expectedOutputs);
             }
 
-            applyAllGradients(learnRate);
+            applyAllGradients(learnRate / data.Length);
+            clearAllGradients();
 
-            return cost(data);
+            return cost / data.Length;
+        }
+
+        public void calculateAllGradients(double[] expectedOutputs)
+        {
+            foreach (Layer layer in layers)
+            {
+                layer.calculateGradients(expectedOutputs);
+            }
         }
 
 
@@ -158,6 +152,16 @@ public class Network
             foreach (Layer layer in layers)
             {
                 layer.applyGradients(learnRate);
+            }
+        }
+
+
+        // Resets all weight and bias gradients to 0 for the next learning iteration
+        public void clearAllGradients()
+        {
+            foreach (Layer layer in layers)
+            {
+                layer.clearGradients();
             }
         }
 

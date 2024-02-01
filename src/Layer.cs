@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 public class Layer
 {
@@ -133,7 +134,48 @@ public class Layer
     }
 
 
-    // applies the two weight/bias cost gradients to the weights and biases of the layer
+    public void calculateGradients(double[] expectedOutput)
+    {
+        // output layer is starting point for backprop algorithm, so it gets treated a little bit differently from the others
+        if (nextLayer == null && previousLayer != null)
+        {
+            for (int i = 0; i < previousLayer.nodeCount; i++)
+            {
+                for (int j = 0; j < nodeCount; j++)
+                {
+                    previousLayer.biasCostGradient[j] += nodes[j].partialGradient(expectedOutput[j]);
+                    previousLayer.weightCostGradient[i,j] += previousLayer.nodes[i].output() * nodes[j].partialGradient(expectedOutput[j]);
+                }
+            }
+        }
+
+
+        else if (nextLayer != null && previousLayer != null)
+        {
+
+            for (int i = 0; i < nextLayer.nodeCount; i++)
+            {
+                for (int j = 0; j < nodeCount; j++)
+                {
+                    nodes[j].nodePartialGradient += weights[j,i] * nextLayer.nodes[i].nodePartialGradient;
+                }
+            }
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                nodes[i].nodePartialGradient *= nodes[i].activationDerivative();
+
+                for (int j = 0; j < previousLayer.nodeCount; j++)
+                {
+                    previousLayer.weightCostGradient[j,i] += nodes[i].nodePartialGradient * previousLayer.nodes[j].output();
+                    previousLayer.biasCostGradient[i] += nodes[i].nodePartialGradient;
+                }
+            }
+        }
+    }
+
+
+    // applies the weight/bias cost gradients to the weights and biases of the layer
     public void applyGradients(double learnRate)
     {
         if (nextLayer == null)
@@ -149,6 +191,24 @@ public class Layer
             }
         }
 
+    }
+
+
+    // resets the weights and bias gradients to 0
+    public void clearGradients()
+    {
+        for (int i = 0; i < weightCostGradient.GetLength(0); i++)
+        {
+            for (int j = 0; j < weightCostGradient.GetLength(1); j++)
+            {
+                weightCostGradient[i,j] = 0;
+            }
+        }
+
+        for (int i = 0; i < biasCostGradient.Length; i++)
+        {
+            biasCostGradient[i] = 0;
+        }
     }
 
 }

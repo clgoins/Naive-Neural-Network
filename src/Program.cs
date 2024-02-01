@@ -11,7 +11,7 @@ public class Program
     {
 
         // create new network
-        Network network = new Network(2,3,2);
+        Network network = new Network(2,5,5,5,5,5,2);
 
 
 
@@ -20,7 +20,7 @@ public class Program
         /////////////////////////////
 
         // load training data from file
-        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/linear data/data0.csv", 2, 2);
+        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG0.csv", 2, 2);
 
 
         int batchSize = 100;
@@ -36,7 +36,7 @@ public class Program
 
                 Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
 
-                double cost = network.train(batch, 0.0005);
+                double cost = network.train(batch, 0.001);
                 Console.WriteLine("Cost: " + cost);
 
                 batchCount++;
@@ -50,7 +50,7 @@ public class Program
         /////////////////////////////
 
 
-        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/linear data/data1.csv", 2, 2);
+        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG1.csv", 2, 2);
 
         double pointsCorrect = 0;
         double pointsCounted = 0;

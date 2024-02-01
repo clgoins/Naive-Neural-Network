@@ -2,8 +2,7 @@ public class Node
 {
     private double weightedInput;
     private double activationValue;
-    private double nodePartialGradient;
-
+    public double nodePartialGradient;
 
     // Takes a weighted input in, activates the node, and stores the input & activation value
     public void input(double input, bool activateNode)
@@ -11,7 +10,7 @@ public class Node
         weightedInput = input;
 
         if(activateNode)
-            activationValue = activate(weightedInput);
+            activationValue = activate();
         else
             activationValue = weightedInput;
     }
@@ -25,19 +24,20 @@ public class Node
 
 
     // passes input through sigmoid activation function, stores output value
-    public double activate(double value)
+    private double activate()
     {
-        return 1 / (1 + Math.Exp(-value));    //sigmoid
-        //return Math.Tanh(value);              //tanh
-        //return = Math.Max(0,value);             //relu
+        return 1 / (1 + Math.Exp(-weightedInput));    //sigmoid
+        //return Math.Tanh(weightedInput);              //tanh
+        //return Math.Max(0,weightedInput);             //relu
     }
 
 
     //TODO: tanh & relu derivatives
-    public double activationDerivative(double value)
+    public double activationDerivative()
     {
-        return 1 / (1 + Math.Exp(-value)) * (1 - 1 / (1 + Math.Exp(-value)));   //sigmoid
-
+        return 1 / (1 + Math.Exp(-weightedInput)) * (1 - 1 / (1 + Math.Exp(-weightedInput)));   //sigmoid
+        //return 1 - (Math.Tanh(weightedInput) * Math.Tanh(weightedInput));   //tanh
+        //return weightedInput <= 0 ? 0 : 1;  //relu
     }
 
 
@@ -54,6 +54,15 @@ public class Node
     {
         double cost = 2 * (activationValue - expectedOutput);
         return cost;
+    }
+
+
+    // calculates, stores and returns part of the weight/bias gradient calculation
+    // used on output layer as the start of the backpropagation algorithm
+    public double partialGradient(double expectedOutput)
+    {
+        nodePartialGradient = nodeCostDerr(expectedOutput) * activationDerivative();
+        return nodePartialGradient;
     }
 
 }
