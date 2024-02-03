@@ -36,7 +36,7 @@ public class Network
 
 
         // Takes a list of inputs, runs them through the network, and returns the list of outputs
-        public double[] process(double[] inputValues)
+        public double[] processRaw(double[] inputValues)
         {
 
             layers[0].input(inputValues,true);
@@ -47,6 +47,29 @@ public class Network
             }
 
             return layers[layers.Length - 1].output();
+        }
+
+
+        // Process a list of inputs, returns a single int representing the index of the output node with the greatest value
+        public int process(double[] inputValues)
+        {
+            layers[0].input(inputValues,true);
+
+            for (int i = 0; i < layers.Length; i++)
+            {
+                layers[i].propagate();
+            }
+
+            int maxIndex = 0;
+            double[] outputs = layers[layers.Length - 1].output();
+
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                if (outputs[i] > maxIndex)
+                    maxIndex = i;
+            }
+
+            return maxIndex;
         }
 
 
@@ -110,7 +133,7 @@ public class Network
 
             foreach (TrainingDataPoint point in data)
             {
-                process(point.inputs);
+                processRaw(point.inputs);
                 cost += layers[layers.Length - 1].layerCost(point);
             }
 
@@ -126,7 +149,7 @@ public class Network
 
             foreach (TrainingDataPoint point in data)
             {
-                process(point.inputs);
+                processRaw(point.inputs);
                 cost += layers[layers.Length - 1].layerCost(point);
                 calculateAllGradients(point.expectedOutputs);
             }

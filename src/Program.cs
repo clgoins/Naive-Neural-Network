@@ -11,7 +11,7 @@ public class Program
     {
 
         // create new network
-        Network network = new Network(2,5,5,5,5,5,2);
+        Network network = new Network(2,3,2);
 
 
 
@@ -20,8 +20,8 @@ public class Program
         /////////////////////////////
 
         // load training data from file
-        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG0.csv", 2, 2);
-
+        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("D:/Programs/Unity/Projects/Network Visualizer/Assets/data/linear data/dataUNITY0.csv", 2, 2);
+        trainingData = normalize(trainingData);
 
         int batchSize = 100;
 
@@ -30,17 +30,17 @@ public class Program
         {
             int batchCount = 0;
 
-            while (batchCount * batchSize < trainingData.Length)
-            {
-                TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
+            //while (batchCount * batchSize < trainingData.Length)
+            //{
+                //TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
 
-                Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
+                //Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
 
-                double cost = network.train(batch, 0.001);
+                double cost = network.train(trainingData, 0.005);
                 Console.WriteLine("Cost: " + cost);
 
-                batchCount++;
-            }
+                //batchCount++;
+            //}
         }
 
 
@@ -50,14 +50,14 @@ public class Program
         /////////////////////////////
 
 
-        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG1.csv", 2, 2);
+        TrainingDataPoint[] testingData = loadTrainingDataFromFile("D:/Programs/Unity/Projects/Network Visualizer/Assets/data/linear data/dataUNITY1.csv", 2, 2);
 
         double pointsCorrect = 0;
         double pointsCounted = 0;
 
         foreach (TrainingDataPoint point in testingData)
         {
-            double[] actualOutputs = network.process(point.inputs);
+            double[] actualOutputs = network.processRaw(point.inputs);
 
             if (actualOutputs[0] < actualOutputs[1] && point.expectedOutputs[0] < point.expectedOutputs[1])
                 pointsCorrect++;
@@ -110,6 +110,20 @@ public class Program
         }
 
         return data.ToArray();
+    }
+
+    public static TrainingDataPoint[] normalize(TrainingDataPoint[] trainingData)
+    {
+        TrainingDataPoint[] normalizedData = new TrainingDataPoint[trainingData.Length];
+
+        for (int i = 0; i < normalizedData.Length; i++)
+        {
+            double[] inputs = {trainingData[i].inputs[0] / 1920, trainingData[i].inputs[1] / 1080 };
+
+            normalizedData[i] = new TrainingDataPoint(inputs, trainingData[i].expectedOutputs);
+        }
+
+        return normalizedData;
     }
 
 }
