@@ -11,7 +11,8 @@ public class Program
     {
 
         // create new network
-        Network network = new Network(2,3,2);
+        Network network = new Network(2,3,3,3,2);
+        network.setActivationFunction(activationFunctions.tanh);
 
 
 
@@ -20,15 +21,18 @@ public class Program
         /////////////////////////////
 
         // load training data from file
-        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("D:/Programs/Unity/Projects/Network Visualizer/Assets/data/linear data/dataUNITY0.csv", 2, 2);
-        trainingData = normalize(trainingData);
+        //TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG0.csv", 2, 2);
+        int[] trainingData = loadMNIST("./data/MNIST/");
+        //trainingData = normalize(trainingData);
 
+/*
         int batchSize = 100;
 
         // runs gradient descent algorithm until a key is pressed
         while(! Console.KeyAvailable)
         {
             int batchCount = 0;
+            trainingData = shuffle(trainingData);
 
             while (batchCount * batchSize < trainingData.Length)
             {
@@ -36,7 +40,7 @@ public class Program
 
                 Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
 
-                double cost = network.train(trainingData, 0.005);
+                double cost = network.train(trainingData, 0.05);
                 Console.WriteLine("Cost: " + cost);
 
                 batchCount++;
@@ -50,7 +54,7 @@ public class Program
         /////////////////////////////
 
 
-        TrainingDataPoint[] testingData = loadTrainingDataFromFile("D:/Programs/Unity/Projects/Network Visualizer/Assets/data/linear data/dataUNITY1.csv", 2, 2);
+        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG1.csv", 2, 2);
 
         double pointsCorrect = 0;
         double pointsCounted = 0;
@@ -69,6 +73,17 @@ public class Program
             Console.WriteLine("Accuracy: " + String.Format("{0:0.00}", pointsCorrect / pointsCounted));
 
         }
+*/
+
+        for (int i = 0; i < 28; i++)
+        {
+            for (int j = 0; j < 28; j++)
+            {
+                Console.Write(trainingData[i]);
+            }
+        }
+
+
 
     }
 
@@ -112,18 +127,53 @@ public class Program
         return data.ToArray();
     }
 
-    public static TrainingDataPoint[] normalize(TrainingDataPoint[] trainingData)
-    {
-        TrainingDataPoint[] normalizedData = new TrainingDataPoint[trainingData.Length];
 
-        for (int i = 0; i < normalizedData.Length; i++)
+    // Loads training data from the MNIST data set
+    public static int[] loadMNIST(string path)
         {
-            double[] inputs = {trainingData[i].inputs[0] / 1920, trainingData[i].inputs[1] / 1080 };
+        int[] data = new int[28*28];
 
-            normalizedData[i] = new TrainingDataPoint(inputs, trainingData[i].expectedOutputs);
+        using(BinaryReader reader = new BinaryReader(new FileStream(path + "train-images.idx3-ubyte", FileMode.Open)))
+        {
+            //skip the file header
+            reader.BaseStream.Seek(16, SeekOrigin.Begin);
+
+            // temporary place to store the image data
+            int[] nextImage = new int[28*28];
+
+            // PeekChar() returns -1 at EOF
+            while (reader.PeekChar() != -1)
+            {
+
+                for (int i = 0; i < 28*28; i++)
+                {
+                    Console.WriteLine(reader.Read());
+                }
+
+            }
         }
 
-        return normalizedData;
+        return data;
     }
+
+
+    //Shuffles the array of training data according to Fisher-Yates algorithm
+    public static TrainingDataPoint[] shuffle(TrainingDataPoint[] data)
+    {
+        TrainingDataPoint[] shuffled = data;
+
+        int n = shuffled.Length;
+        Random rand = new Random();
+        while(n > 1)
+        {
+            int k = rand.Next(n--);
+            TrainingDataPoint temp = shuffled[n];
+            shuffled[n] = shuffled[k];
+            shuffled[k] = temp;
+        }
+        return shuffled;
+    }
+
+
 
 }

@@ -1,36 +1,41 @@
 ﻿using System.Diagnostics;
 
+    public enum activationFunctions
+    {
+        relu, leaky, sigmoid, tanh
+    }
+
 public class Network
     {
 
+
+
         private Layer[] layers;
+        private Connection[] connections;
 
         // Spins up a new network
         // length of config array = # of layers in network. Value at each index = # of nodes in respective layer
         public Network(params int[] config)
         {
+
             if (config.Length <= 1)
             {
                 throw new InvalidLayerCountException();
             }
 
             layers = new Layer[config.Length];
+            connections = new Connection[config.Length - 1];
 
             // create layers
-            for (int i = 0; i < config.Length; i++)
+            for (int i = 0; i < layers.Length; i++)
             {
                 layers[i] = new Layer(config[i]);
             }
 
-            // connect layers
-            for (int i = 0; i < config.Length; i++)
+            // create connections
+            for (int i = 0; i < connections.Length; i++)
             {
-                if (i == 0)
-                    layers[i].connect(null, layers[i+1]);
-                else if (i == config.Length - 1)
-                    layers[i].connect(layers[i-1], null);
-                else
-                    layers[i].connect(layers[i-1], layers[i+1]);
+                connections[i] = new Connection(layers[i], layers[i + 1]);
             }
         }
 
@@ -41,9 +46,9 @@ public class Network
 
             layers[0].input(inputValues,true);
 
-            for (int i = 0; i < layers.Length; i++)
+            for (int i = 0; i < connections.Length; i++)
             {
-                layers[i].propagate();
+                connections[i].propagate();
             }
 
             return layers[layers.Length - 1].output();
@@ -55,9 +60,9 @@ public class Network
         {
             layers[0].input(inputValues,true);
 
-            for (int i = 0; i < layers.Length; i++)
+            for (int i = 0; i < connections.Length; i++)
             {
-                layers[i].propagate();
+                connections[i].propagate();
             }
 
             int maxIndex = 0;
@@ -73,56 +78,20 @@ public class Network
         }
 
 
-        public void printDebugStuff()
+        // chooses the activation function to use for the network
+        public void setActivationFunction(activationFunctions activationFunction)
         {
-            Console.WriteLine();
-
-            for (int i = 0; i < layers.Length; i++)
+            foreach(Layer layer in layers)
             {
-                //print layer number
-                Console.BackgroundColor = ConsoleColor.Green;
-                Console.WriteLine("Layer " + (i + 1) + ": ");
-                Console.WriteLine();
-                Console.BackgroundColor = ConsoleColor.Black;
-
-                //print activation values
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine("Activations: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                double[] activationValues = layers[i].output();
-                for (int j = 0; j < activationValues.Length; j++)
-                {
-                    Console.Write(activationValues[j] + ", ");
-                }
-                Console.WriteLine();
-                Console.WriteLine();
-
-                //print weight values
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine("Weights: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                for (int j = 0; j < layers[i].weights.GetLength(0); j++)
-                {
-                    for (int k = 0; k < layers[i].weights.GetLength(1); k++)
-                    {
-                        Console.Write(layers[i].weights[j,k] + ", ");
-                    }
-                    Console.WriteLine();
-                }
-                Console.WriteLine();
-
-                //print bias values
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine("Biases: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                for (int j = 0; j < layers[i].biases.Length; j++)
-                {
-                    Console.Write(layers[i].biases[j] + ", ");
-                }
-                Console.WriteLine();
-                Console.WriteLine();
-
+                layer.setActivationFunction(activationFunction);
             }
+        }
+
+
+        // chooses an activation function specific to the output layer
+        public void setOutputLayerActivationFunction(activationFunctions activationFunction)
+        {
+            layers[layers.Length - 1].setActivationFunction(activationFunction);
         }
 
 
@@ -151,7 +120,7 @@ public class Network
             {
                 processRaw(point.inputs);
                 cost += layers[layers.Length - 1].layerCost(point);
-                calculateAllGradients(point.expectedOutputs);
+                calculateAllGradients(point);
             }
 
             applyAllGradients(learnRate / data.Length);
@@ -160,31 +129,33 @@ public class Network
             return cost / data.Length;
         }
 
-        public void calculateAllGradients(double[] expectedOutputs)
+        private void calculateAllGradients(TrainingDataPoint dataPoint)
         {
-            foreach (Layer layer in layers)
+            connections[connections.Length - 1].calculateOutputLayerPartials(dataPoint);
+
+            for (int i = connections.Length - 1; i >= 0; i--)
             {
-                layer.calculateGradients(expectedOutputs);
+                connections[i].calculateGradients();
             }
         }
 
 
         // applies all weight and bias gradients to every layer in the network
-        public void applyAllGradients(double learnRate)
+        private void applyAllGradients(double learnRate)
         {
-            foreach (Layer layer in layers)
+            foreach (Connection connection in connections)
             {
-                layer.applyGradients(learnRate);
+                connection.applyGradients(learnRate);
             }
         }
 
 
         // Resets all weight and bias gradients to 0 for the next learning iteration
-        public void clearAllGradients()
+        private void clearAllGradients()
         {
-            foreach (Layer layer in layers)
+            foreach (Connection connection in connections)
             {
-                layer.clearGradients();
+                connection.clearGradients();
             }
         }
 

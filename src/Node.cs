@@ -1,10 +1,19 @@
+using System.Security.Cryptography.X509Certificates;
+
 public class Node
 {
     private double weightedInput;
     private double activationValue;
-    public double nodePartialGradient;
+    public double nodePartialGradient {get; set;}
+    public activationFunctions activationFunction;
+
+    public Node()
+    {
+        activationFunction = activationFunctions.sigmoid;
+    }
 
     // Takes a weighted input in, activates the node, and stores the input & activation value
+    // ActivateNode should be false for nodes in the input layer, and true for all other layers
     public void input(double input, bool activateNode)
     {
         weightedInput = input;
@@ -26,18 +35,48 @@ public class Node
     // passes input through sigmoid activation function, stores output value
     private double activate()
     {
-        return 1 / (1 + Math.Exp(-weightedInput));    //sigmoid
-        //return Math.Tanh(weightedInput);              //tanh
-        //return Math.Max(0,weightedInput);             //relu
+        switch(activationFunction)
+        {
+            case activationFunctions.sigmoid:
+                return 1 / (1 + Math.Exp(-weightedInput));    //sigmoid
+
+            case activationFunctions.tanh:
+                return Math.Tanh(weightedInput);              //tanh
+
+            case activationFunctions.relu:
+                return Math.Max(0,weightedInput);             //reLU
+
+            case activationFunctions.leaky:
+                return weightedInput >= 0 ? weightedInput : weightedInput * 0.01;   //leaky reLU
+
+            default:
+                return 1 / (1 + Math.Exp(-weightedInput));    //default to sigmoid
+
+
+        }
     }
 
 
-    //TODO: tanh & relu derivatives
     public double activationDerivative()
     {
-        return 1 / (1 + Math.Exp(-weightedInput)) * (1 - 1 / (1 + Math.Exp(-weightedInput)));   //sigmoid
-        //return 1 - (Math.Tanh(weightedInput) * Math.Tanh(weightedInput));   //tanh
-        //return weightedInput <= 0 ? 0 : 1;  //relu
+        switch(activationFunction)
+        {
+            case activationFunctions.relu:
+                return weightedInput <= 0 ? 0 : 1;  //reLU
+
+            case activationFunctions.leaky:
+                return weightedInput <= 0 ? 0.01 : 1;   //leaky reLU
+
+            case activationFunctions.sigmoid:
+                return 1 / (1 + Math.Exp(-weightedInput)) * (1 - 1 / (1 + Math.Exp(-weightedInput)));   //sigmoid
+
+            case activationFunctions.tanh:
+                return 1 - (Math.Tanh(weightedInput) * Math.Tanh(weightedInput));   //tanh
+
+            default:
+                return 1 / (1 + Math.Exp(-weightedInput)) * (1 - 1 / (1 + Math.Exp(-weightedInput)));   //default to sigmoid
+
+        }
     }
 
 
@@ -50,19 +89,16 @@ public class Node
 
 
     // derivative of node cost w/ respect to outputValue
-    public double nodeCostDerr(double expectedOutput)
+    public double nodeCostDerivative(double expectedOutput)
     {
         double cost = 2 * (activationValue - expectedOutput);
         return cost;
     }
 
 
-    // calculates, stores and returns part of the weight/bias gradient calculation
-    // used on output layer as the start of the backpropagation algorithm
-    public double partialGradient(double expectedOutput)
+    public void chooseActivationFunction(activationFunctions function)
     {
-        nodePartialGradient = nodeCostDerr(expectedOutput) * activationDerivative();
-        return nodePartialGradient;
+        activationFunction = function;
     }
 
 }
