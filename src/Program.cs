@@ -30,17 +30,17 @@ public class Program
         {
             int batchCount = 0;
 
-            //while (batchCount * batchSize < trainingData.Length)
-            //{
-                //TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
+            while (batchCount * batchSize < trainingData.Length)
+            {
+                TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
 
-                //Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
+                Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
 
                 double cost = network.train(trainingData, 0.005);
                 Console.WriteLine("Cost: " + cost);
 
-                //batchCount++;
-            //}
+                batchCount++;
+            }
         }
 
 
