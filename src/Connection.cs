@@ -8,6 +8,8 @@ public class Connection
     private double[,] weightCostGradients;
     private double[] biasCostGradients;
 
+    Random rand = new Random();
+
     public Connection(Layer leftLayer, Layer rightLayer)
     {
         this.leftLayer = leftLayer;
@@ -25,8 +27,6 @@ public class Connection
     // sets all weights and biases to random values
     private void initializeWeightsAndBiases()
     {
-
-        Random rand = new Random();
 
         for (int i = 0; i < rightLayer.nodeCount; i++)
         {
@@ -122,13 +122,21 @@ public class Connection
     // applies the weight/bias cost gradients to the weights and biases of the layer
     public void applyGradients(double learnRate)
     {
+        double noiseValue = 0;
+
         for (int i = 0; i < rightLayer.nodeCount; i++)
         {
             biases[i] -= biasCostGradients[i] * learnRate;
 
             for (int j = 0; j < leftLayer.nodeCount; j++)
             {
-                weights[j,i] -= weightCostGradients[j,i] * learnRate;
+                // small chance to add some random noise to the weight
+                if (rand.NextDouble() < 0.05)
+                {
+                    noiseValue = rand.NextDouble() * 0.1 * learnRate;
+                }
+
+                weights[j,i] -= (weightCostGradients[j,i] + noiseValue) * learnRate;
             }
         }
     }

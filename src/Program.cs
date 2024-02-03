@@ -1,4 +1,6 @@
 
+using System.Diagnostics;
+
 public class Program
 {
 
@@ -11,8 +13,10 @@ public class Program
     {
 
         // create new network
-        Network network = new Network(2,3,3,3,2);
+        Console.Write("Creating network");
+        Network network = new Network(784,15,10);
         network.setActivationFunction(activationFunctions.tanh);
+        Console.WriteLine("....success");
 
 
 
@@ -21,30 +25,54 @@ public class Program
         /////////////////////////////
 
         // load training data from file
-        //TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG0.csv", 2, 2);
-        int[] trainingData = loadMNIST("./data/MNIST/");
+        Console.Write("Loading training data");
+        //TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/linear data/dataBIG0.csv", 2, 2);
         //trainingData = normalize(trainingData);
+        TrainingDataPoint[] fullData = loadMNIST();
+        TrainingDataPoint[] trainingData = new TrainingDataPoint[48000];
+        TrainingDataPoint[] testingData = new TrainingDataPoint[12000];
 
-/*
-        int batchSize = 100;
+        shuffle(fullData);
+        Array.Copy(fullData,0,trainingData,0,48000);
+        Array.Copy(fullData,48000,testingData,0,12000);
+
+        Console.WriteLine("....success");
+
+        int batchSize = 25;
+        int epoch = 0;
+        double learnRate = 1;
+        double costSum = 0;
+        double cost = 0;
+        double previousCost = 1;
 
         // runs gradient descent algorithm until a key is pressed
+        Console.WriteLine("Training network...");
         while(! Console.KeyAvailable)
         {
             int batchCount = 0;
-            trainingData = shuffle(trainingData);
+
+            //trainingData = shuffle(trainingData);
 
             while (batchCount * batchSize < trainingData.Length)
             {
                 TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
-
                 Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
-
-                double cost = network.train(trainingData, 0.05);
-                Console.WriteLine("Cost: " + cost);
+                costSum += network.train(trainingData, learnRate);
 
                 batchCount++;
             }
+
+            cost = costSum / trainingData.Length;
+            Console.WriteLine($"Epoch {epoch} Cost: " + cost);
+
+            // If the cost this epoch is within 10% of the cost last epoch, change isn't happening and the learnRate should be reduced
+            if (cost / previousCost < 1.1 && cost / previousCost > 0.9)
+                learnRate *= 0.75;
+
+            previousCost = cost;
+            costSum = 0;
+            epoch++;
+
         }
 
 
@@ -54,35 +82,32 @@ public class Program
         /////////////////////////////
 
 
-        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/quadratic data/dataBIG1.csv", 2, 2);
+        //TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/linear data/dataBIG1.csv", 2, 2);
 
         double pointsCorrect = 0;
         double pointsCounted = 0;
 
         foreach (TrainingDataPoint point in testingData)
         {
-            double[] actualOutputs = network.processRaw(point.inputs);
+            int output = network.process(point.inputs);
+            int expectedOutput = 0;
 
-            if (actualOutputs[0] < actualOutputs[1] && point.expectedOutputs[0] < point.expectedOutputs[1])
-                pointsCorrect++;
-            else if (actualOutputs[0] > actualOutputs[1] && point.expectedOutputs[0] > point.expectedOutputs[1])
+            for (int i = 0; i < point.expectedOutputs.Length; i++)
+            {
+                if (point.expectedOutputs[i] > 0)
+                {
+                    expectedOutput = i;
+                    break;
+                }
+            }
+
+            if (expectedOutput == output)
                 pointsCorrect++;
 
             pointsCounted++;
 
-            Console.WriteLine("Accuracy: " + String.Format("{0:0.00}", pointsCorrect / pointsCounted));
-
+            Console.WriteLine($"Accuracy: {pointsCorrect / (double)pointsCounted}");
         }
-*/
-
-        for (int i = 0; i < 28; i++)
-        {
-            for (int j = 0; j < 28; j++)
-            {
-                Console.Write(trainingData[i]);
-            }
-        }
-
 
 
     }
@@ -129,31 +154,57 @@ public class Program
 
 
     // Loads training data from the MNIST data set
-    public static int[] loadMNIST(string path)
+    public static TrainingDataPoint[] loadMNIST()
+    {
+        TrainingDataPoint[] trainingData;
+
+        using (BinaryReader labelFile = new BinaryReader(new FileStream("D:/Dev Stuff/Naive Neural Network/data/MNIST/train-labels.idx1-ubyte", FileMode.Open)))
         {
-        int[] data = new int[28*28];
-
-        using(BinaryReader reader = new BinaryReader(new FileStream(path + "train-images.idx3-ubyte", FileMode.Open)))
-        {
-            //skip the file header
-            reader.BaseStream.Seek(16, SeekOrigin.Begin);
-
-            // temporary place to store the image data
-            int[] nextImage = new int[28*28];
-
-            // PeekChar() returns -1 at EOF
-            while (reader.PeekChar() != -1)
+            using (BinaryReader imageFile = new BinaryReader(new FileStream("D:/Dev Stuff/Naive Neural Network/data/MNIST/train-images.idx3-ubyte", FileMode.Open)))
             {
+                int magic1 = endianSwap(imageFile.ReadInt32());     //headers seem to be stored in Big Endian?
+                int imageCount = endianSwap(imageFile.ReadInt32());
+                int rowCount = endianSwap(imageFile.ReadInt32());
+                int colCount = endianSwap(imageFile.ReadInt32());
 
-                for (int i = 0; i < 28*28; i++)
+                int magic2 = endianSwap(labelFile.ReadInt32());
+                int labelCount = endianSwap(labelFile.ReadInt32());
+
+                trainingData = new TrainingDataPoint[imageCount];
+
+                // for each image
+                for (int i = 0; i < imageCount; i++)
                 {
-                    Console.WriteLine(reader.Read());
+                    // store image & label data in arrays
+                    double[] inputs = new double[rowCount * colCount];
+                    double[] expectedOutputs = new double[10];
+
+                    for (int pixel = 0; pixel < rowCount * colCount; pixel++)
+                    {
+                        inputs[pixel] = (double)(imageFile.ReadByte() / 255);   // convert to double, scale down from 0-255 to 0-1
+                    }
+
+                    // each byte in label file will be 0-9. Treat the byte as the index of expected output that should be activated.
+                    // All indicies of expected output should be 0 except the correct answer to the training data point.
+                    expectedOutputs[labelFile.ReadByte()] = 1.0;
+
+                    trainingData[i] = new TrainingDataPoint(inputs,expectedOutputs);
                 }
+
 
             }
         }
 
-        return data;
+        return trainingData;
+    }
+
+
+    // Converts a little endian 4-byte int and converts it to big endian
+    private static int endianSwap(int value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        Array.Reverse(bytes);
+        return BitConverter.ToInt32(bytes);
     }
 
 
