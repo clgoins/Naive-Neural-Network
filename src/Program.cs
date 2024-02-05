@@ -14,7 +14,7 @@ public class Program
 
         // create new network
         Console.Write("Creating network");
-        Network network = new Network(784,15,10);
+        Network network = new Network(2,3,2);
         network.setActivationFunction(activationFunctions.tanh);
         Console.WriteLine("....success");
 
@@ -26,15 +26,8 @@ public class Program
 
         // load training data from file
         Console.Write("Loading training data");
-        //TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/linear data/dataBIG0.csv", 2, 2);
+        TrainingDataPoint[] trainingData = loadTrainingDataFromFile("./data/linear data/dataBIG0.csv", 2, 2);
         //trainingData = normalize(trainingData);
-        TrainingDataPoint[] fullData = loadMNIST();
-        TrainingDataPoint[] trainingData = new TrainingDataPoint[48000];
-        TrainingDataPoint[] testingData = new TrainingDataPoint[12000];
-
-        shuffle(fullData);
-        Array.Copy(fullData,0,trainingData,0,48000);
-        Array.Copy(fullData,48000,testingData,0,12000);
 
         Console.WriteLine("....success");
 
@@ -47,7 +40,7 @@ public class Program
 
         // runs gradient descent algorithm until a key is pressed
         Console.WriteLine("Training network...");
-        while(! Console.KeyAvailable)
+        while(! Console.KeyAvailable || previousCost < 0.001)
         {
             int batchCount = 0;
 
@@ -58,7 +51,7 @@ public class Program
                 TrainingDataPoint[] batch = new TrainingDataPoint[batchSize];
                 Array.Copy(trainingData, batchCount * batchSize, batch, 0, batchSize);
                 costSum += network.train(trainingData, learnRate);
-
+                Console.WriteLine($"Epoch {epoch} Cost: " + (costSum / (batchSize * batchCount)));
                 batchCount++;
             }
 
@@ -82,7 +75,7 @@ public class Program
         /////////////////////////////
 
 
-        //TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/linear data/dataBIG1.csv", 2, 2);
+        TrainingDataPoint[] testingData = loadTrainingDataFromFile("./data/linear data/dataBIG1.csv", 2, 2);
 
         double pointsCorrect = 0;
         double pointsCounted = 0;
@@ -158,9 +151,9 @@ public class Program
     {
         TrainingDataPoint[] trainingData;
 
-        using (BinaryReader labelFile = new BinaryReader(new FileStream("D:/Dev Stuff/Naive Neural Network/data/MNIST/train-labels.idx1-ubyte", FileMode.Open)))
+        using (BinaryReader labelFile = new BinaryReader(new FileStream("./data/MNIST/train-labels.idx1-ubyte", FileMode.Open)))
         {
-            using (BinaryReader imageFile = new BinaryReader(new FileStream("D:/Dev Stuff/Naive Neural Network/data/MNIST/train-images.idx3-ubyte", FileMode.Open)))
+            using (BinaryReader imageFile = new BinaryReader(new FileStream("./data/MNIST/train-images.idx3-ubyte", FileMode.Open)))
             {
                 int magic1 = endianSwap(imageFile.ReadInt32());     //headers seem to be stored in Big Endian?
                 int imageCount = endianSwap(imageFile.ReadInt32());
